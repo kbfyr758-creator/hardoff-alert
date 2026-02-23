@@ -1,0 +1,26 @@
+name: Hardoff Alert
+
+on:
+  schedule:
+    - cron: "*/1 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check website
+        run: |
+          URL="https://netmall.hardoff.co.jp/search/?s=1&q=%E3%83%99%E3%82%A4%E3%83%96%E3%83%AC%E3%83%BC%E3%83%89"
+          curl -s $URL > current.txt
+          
+          if [ -f old.txt ]; then
+            if cmp -s old.txt current.txt; then
+              echo "No changes"
+            else
+              echo "New update detected!"
+              echo "Hardoff updated!" | mail -s "Hardoff Alert" YOUR_EMAIL: kbfyr758@gmail.com
+            fi
+          fi
+          
+          mv current.txt old.txt
