@@ -1,0 +1,33 @@
+name: Hardoff Alert
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check page
+        run: |
+          curl -s "https://netmall.hardoff.co.jp/search/?s=1&q=ベイブレード" > page.txt
+          if grep -q "在庫あり" page.txt; then
+            echo "FOUND=1" >> $GITHUB_ENV
+          else
+            echo "FOUND=0" >> $GITHUB_ENV
+          fi
+
+      - name: Send Email
+        if: env.FOUND == '1'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: ハードオフ在庫あり！
+          body: 商品が見つかりました！
+          to: ${{ secrets.EMAIL_USERNAME }}
+          from: Hardoff Alert
